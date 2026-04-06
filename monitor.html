@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>モニター画面 | 人数カウンター</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0c14;
+      --surface: #10131f;
+      --surface2: #161929;
+      --border: rgba(255, 255, 255, 0.07);
+      --male: #3b82f6;
+      --female: #ec4899;
+      --text: #f1f5f9;
+      --text-muted: #64748b;
+      --radius: 20px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 20% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(139, 92, 246, 0.08) 0%, transparent 60%);
+    }
+
+    header {
+      text-align: center;
+      padding: 30px 16px 20px;
+    }
+    header h1 {
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      font-weight: 900;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    header p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 0 16px 40px;
+    }
+
+    /* ─── SUMMARY (TOTAL/MALE/FEMALE) ─── */
+    .summary-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 24px;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    .summary-card .total-label {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+    }
+    .summary-card .total-value {
+      font-size: 3.5rem;
+      font-weight: 900;
+      line-height: 1.1;
+      margin: 4px 0 20px;
+      letter-spacing: -0.04em;
+    }
+
+    .gender-split {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+    }
+    .gender-stat {
+      flex: 1;
+      background: var(--surface2);
+      border-radius: 14px;
+      padding: 16px 10px;
+      border: 1px solid var(--border);
+    }
+    .gender-stat .g-icon { font-size: 1.8rem; margin-bottom: 4px; }
+    .gender-stat .g-val { font-size: 2rem; font-weight: 900; line-height: 1; }
+    .gender-stat.m .g-val { color: var(--male); }
+    .gender-stat.f .g-val { color: var(--female); }
+
+    /* ─── GROUPS LIST ─── */
+    .groups-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .group-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .group-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .group-name {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .group-badge {
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 99px;
+    }
+
+    .group-members {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .member-chip {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 6px 12px;
+      border-radius: 99px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .empty-msg {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <p>Live Monitor</p>
+    <h1>人数・グループ状況</h1>
+  </header>
+
+  <main>
+    <div class="summary-card">
+      <div class="total-label">現在合計</div>
+      <div class="total-value" id="total-count">0 名</div>
+      
+      <div class="gender-split">
+        <div class="gender-stat m">
+          <div class="g-icon">🧑</div>
+          <div class="g-val" id="male-count">0</div>
+        </div>
+        <div class="gender-stat f">
+          <div class="g-icon">👱‍♀️</div>
+          <div class="g-val" id="female-count">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="groups-list" id="groups-list"></div>
+  </main>
+
+  <script type="module">
+    // Firebase 設定
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+    import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAVmskS19VG4VsFU58oqfdWWnVAelTxJ84",
+      authDomain: "make-group.firebaseapp.com",
+      projectId: "make-group",
+      storageBucket: "make-group.firebasestorage.app",
+      messagingSenderId: "55535199650",
+      appId: "1:55535199650:web:ff5d14233d7e2b8add3efb",
+      measurementId: "G-FG5Z54WDQX"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const docRef = doc(db, "appData", "counter1");
+
+    const COLORS = [
+      ['#3b82f6', 'rgba(59,130,246,0.15)'],
+      ['#ec4899', 'rgba(236,72,153,0.15)'],
+      ['#22c55e', 'rgba(34,197,94,0.15)'],
+      ['#f59e0b', 'rgba(245,158,11,0.15)'],
+      ['#8b5cf6', 'rgba(139,92,246,0.15)'],
+      ['#06b6d4', 'rgba(6,182,212,0.15)'],
+      ['#f97316', 'rgba(249,115,22,0.15)'],
+      ['#a855f7', 'rgba(168,85,247,0.15)'],
+      ['#10b981', 'rgba(16,185,129,0.15)'],
+      ['#ef4444', 'rgba(239,68,68,0.15)'],
+    ];
+
+    // リアルタイム反映処理
+    onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const counts = data.counts || { male: 0, female: 0 };
+        const groups = data.groups || [];
+        
+        // カウント更新
+        document.getElementById('male-count').textContent = counts.male;
+        document.getElementById('female-count').textContent = counts.female;
+        document.getElementById('total-count').textContent = (counts.male + counts.female) + ' 名';
+        
+        // グループ更新
+        renderGroupsList(groups);
+      }
+    });
+
+    function renderGroupsList(groups) {
+      const listDiv = document.getElementById('groups-list');
+      if (groups.length === 0) {
+        listDiv.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px;">グループはまだありません</div>';
+        return;
+      }
+
+      listDiv.innerHTML = groups.map(g => {
+        const [accent, bg] = COLORS[g.colorIdx % COLORS.length];
+        
+        const mCount = g.members.filter(m => m.gender === 'male').length;
+        const fCount = g.members.filter(m => m.gender === 'female').length;
+
+        const membersHtml = g.members.length === 0 
+          ? '<span class="empty-msg">メンバーがいません</span>'
+          : g.members.map((m, i) => `
+              <div class="member-chip">
+                <span>${m.gender === 'male' ? '🧑' : '👱‍♀️'}</span>
+                <span style="color:${m.gender === 'male' ? 'var(--male)' : 'var(--female)'}">#${i + 1}</span>
+              </div>
+            `).join('');
+
+        return `
+          <div class="group-item" style="border-color:${accent}44; background: linear-gradient(180deg, var(--surface) 20%, ${bg} 150%);">
+            <div class="group-header">
+              <div class="group-name">${g.name}</div>
+              <div class="group-badge" style="background:${accent}22; color:${accent};">
+                ${g.members.length}名
+                ${mCount > 0 || fCount > 0 ? `(🧑${mCount} 👱‍♀️${fCount})` : ''}
+              </div>
+            </div>
+            <div class="group-members">
+              ${membersHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  </script>
+</body>
+</html>
