@@ -225,6 +225,42 @@
       color: var(--text);
     }
 
+    /* ─── STEP SELECTOR ─── */
+    .step-selector {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 24px;
+      background: var(--surface);
+      padding: 10px;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .step-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1rem;
+      font-weight: 700;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .step-btn:hover {
+      color: var(--text);
+      background: rgba(255,255,255,0.05);
+    }
+    .step-btn.active {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
     /* ─── TOTAL ─── */
     .total-bar {
       background: var(--surface);
@@ -585,6 +621,14 @@
   </header>
 
   <main>
+  
+    <div class="step-selector" id="step-selector">
+      <button class="step-btn active" onclick="setStep(1)">1</button>
+      <button class="step-btn" onclick="setStep(2)">2</button>
+      <button class="step-btn" onclick="setStep(3)">3</button>
+      <button class="step-btn" onclick="setStep(4)">4</button>
+      <button class="step-btn" onclick="setStep(5)">5</button>
+    </div>
 
     <div class="counter-grid">
       <div class="counter-card male">
@@ -705,10 +749,22 @@
       }
     });
 
+    // ─── Step Toggle ───────────────────────────────────────
+    let currentStep = 1;
+
+    window.setStep = function(val) {
+      currentStep = val;
+      const btns = document.querySelectorAll('#step-selector .step-btn');
+      btns.forEach(b => b.classList.remove('active'));
+      btns[val - 1].classList.add('active');
+    };
+
     // ─── Counter ───────────────────────────────────────────
     function change(gender, delta) {
+      const actualDelta = delta > 0 ? currentStep : delta; // -の場合は常に1人減らす仕様を維持
+      
       const prev = counts[gender];
-      counts[gender] = Math.max(0, counts[gender] + delta);
+      counts[gender] = Math.max(0, counts[gender] + actualDelta);
       if (counts[gender] === prev) return;
       renderCounts();
 
@@ -724,14 +780,19 @@
       if (groups.length === 0) { assignGroups(true); return; }
 
       if (delta > 0) {
+        // 同じグループにまとめて追加する
         const minIdx = groups.reduce((mi, g, i) => {
           const val = g.members.filter(m => m.gender === gender).length;
           const minVal = groups[mi].members.filter(m => m.gender === gender).length;
           return val < minVal ? i : mi;
         }, 0);
-        groups[minIdx].members.push({ gender });
+        
+        for (let i = 0; i < actualDelta; i++) {
+          groups[minIdx].members.push({ gender });
+        }
+        
         // 左(男性)または右(女性)にトーストを表示
-        showSideToast(gender, groups[minIdx]);
+        showSideToast(gender, groups[minIdx], actualDelta);
       } else {
         let targetIdx = -1, maxCount = -1;
         for (let i = groups.length - 1; i >= 0; i--) {
@@ -877,13 +938,15 @@
       toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
     }
 
-    function showSideToast(gender, groupObj) {
+    function showSideToast(gender, groupObj, amount) {
       const container = document.getElementById(gender === 'male' ? 'toast-left' : 'toast-right');
       const toast = document.createElement('div');
       toast.className = 'side-toast';
       
       const icon = gender === 'male' ? '🧑' : '👱‍♀️';
-      const label = gender === 'male' ? '男性を追加' : '女性を追加';
+      const label = gender === 'male' 
+        ? (amount > 1 ? `男性を追加 <b>x${amount}</b>` : '男性を追加')
+        : (amount > 1 ? `女性を追加 <b>x${amount}</b>` : '女性を追加');
       const color = COLORS[groupObj.colorIdx][0];
       const bg = COLORS[groupObj.colorIdx][1];
 
