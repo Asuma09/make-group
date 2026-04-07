@@ -679,6 +679,8 @@
       ['#ef4444', 'rgba(239,68,68,0.15)'],
     ];
 
+    const HIRAGANA = "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん";
+
     // ─── Firebase 保存処理 ─────────────────────────────────
     // データが変更されるたびにFirestoreに送信する関数
     function saveToFirebase() {
@@ -783,7 +785,7 @@
       ];
 
       groups = Array.from({ length: n }, (_, i) => ({
-        name: `グループ ${i + 1}`,
+        name: `グループ ${HIRAGANA[i % HIRAGANA.length]}`,
         members: [],
         colorIdx: i % COLORS.length,
       }));
@@ -804,11 +806,12 @@
 
     function addOneGroup() {
       const newIdx = groups.length;
-      groups.push({ name: `グループ ${newIdx + 1}`, members: [], colorIdx: newIdx % COLORS.length });
+      const hiraganaName = HIRAGANA[newIdx % HIRAGANA.length];
+      groups.push({ name: `グループ ${hiraganaName}`, members: [], colorIdx: newIdx % COLORS.length });
       document.getElementById('group-count').value = groups.length;
       renderGroups();
       saveToFirebase(); // 追加を保存
-      toast(`グループ ${newIdx + 1} を追加しました`);
+      toast(`グループ ${hiraganaName} を追加しました`);
     }
 
     // グループ名編集イベントの監視
